@@ -12,13 +12,17 @@ st.set_page_config(page_title="AI MEETS PCOS | AI Diagnostic", layout="centered"
 st.markdown("""
     <style>
     html, body, .stApp, .main {
-        background-color: #f0f0f0 !important;  /* Light Grey */
+        background-color: #f0f0f0 !important;
         color: #2c3e50;
     }
 
     h1, h2, h3 {
         color: #2c3e50 !important;
-        text-align: center !important;
+        text-align: left !important;
+    }
+
+    .landing-container {
+        text-align: left !important;
     }
 
     .stButton button {
@@ -100,12 +104,11 @@ st.markdown("""
     html, body, .stApp {
         background-color: #f0f0f0;
         font-family: 'Cairo', sans-serif;
-        direction: rtl;
     }
     .landing-container {
-        text-align: center;
+        text-align: left !important;
         padding: 40px;
-        background-color: #ffffff; /* White Box */
+        background-color: #ffffff;
         border-radius: 16px;
         margin-bottom: 30px;
         box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
@@ -207,3 +210,4 @@ else:
 # --- Footer ---
 st.markdown("---")
 st.markdown("<div style='text-align: center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
+
