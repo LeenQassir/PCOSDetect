@@ -8,11 +8,11 @@ from tensorflow.keras.models import load_model
 # --- Page Configuration ---
 st.set_page_config(page_title="AI MEETS PCOS | AI Diagnostic", layout="centered", page_icon="🩺")
 
-# --- Custom CSS Styling to Hide Default Title ---
+# --- Custom CSS Styling ---
 st.markdown("""
     <style>
     html, body, .stApp, .main {
-        background-color: #f8c8dc !important;
+        background-color: #f0f0f0 !important;  /* Light Grey */
         color: #2c3e50;
     }
 
@@ -98,20 +98,20 @@ st.markdown("""
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
     html, body, .stApp {
-        background-color: #e6f7ff;
+        background-color: #f0f0f0;
         font-family: 'Cairo', sans-serif;
         direction: rtl;
     }
     .landing-container {
         text-align: center;
         padding: 40px;
-        background-color: #d4ecf7;
+        background-color: #ffffff; /* White Box */
         border-radius: 16px;
         margin-bottom: 30px;
-        box-shadow: 0px 0px 15px rgba(0, 91, 153, 0.1);
+        box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
     }
     h1 {
-        color: #005b99;
+        color: #2c3e50;
         font-size: 48px;
         margin-bottom: 10px;
     }
@@ -122,8 +122,8 @@ st.markdown("""
     }
     .note {
         font-size: 18px;
-        color: #005b99;
-        background-color: #e6f2ff;
+        color: #2c3e50;
+        background-color: #e0e0e0;
         padding: 10px;
         border-radius: 8px;
         display: inline-block;
