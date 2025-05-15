@@ -6,10 +6,15 @@ import numpy as np
 import sqlite3
 from datetime import datetime
 from tensorflow.keras.models import load_model
+
+# Fix Ultralytics cache directory permission issue on Streamlit Cloud
+os.environ['YOLO_CACHE_DIR'] = '/mnt/data/yolo_cache'
+os.makedirs('/mnt/data/yolo_cache', exist_ok=True)
+
 from ultralytics import YOLO
 
-# --- Use uploaded YOLO weights file ---
-weights_path = "/mnt/data/yolov8n.pt"  # Your uploaded weights location
+# --- Path to your uploaded YOLO weights file ---
+weights_path = "/mnt/data/yolov8n.pt"  # Make sure you uploaded it here
 
 @st.cache_resource
 def load_classification_model():
@@ -69,11 +74,11 @@ def preprocess_image(image_file):
     img_array = np.expand_dims(img_array, axis=0)
     return img_array
 
-# --- Follicle detection with visualization ---
+# --- Follicle detection and visualization ---
 def detect_and_visualize_follicles(image_path):
-    results = yolo_model.predict(image_path, conf=0.1, iou=0.45)  # Lower conf threshold for sensitivity
+    results = yolo_model.predict(image_path, conf=0.1, iou=0.45)
     count = len(results[0].boxes) if results else 0
-    img_with_boxes = results[0].plot()  # numpy array with boxes drawn
+    img_with_boxes = results[0].plot()
     return count, img_with_boxes
 
 # --- Streamlit UI ---
@@ -170,3 +175,4 @@ else:
 
 st.markdown("---")
 st.markdown("<div style='text-align:center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
+
