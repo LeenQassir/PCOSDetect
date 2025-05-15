@@ -1,47 +1,54 @@
 import streamlit as st
+import shutil
+import os
 from PIL import Image
 import numpy as np
 import sqlite3
 from datetime import datetime
 from tensorflow.keras.models import load_model
 from ultralytics import YOLO
-import os
 import tempfile
+
+# --- Clear Ultralytics cache to fix corrupted weights issue ---
+cache_dir = os.path.expanduser("~/.cache/ultralytics")
+if os.path.exists(cache_dir):
+    shutil.rmtree(cache_dir)
+    st.write("Ultralytics cache cleared to force fresh weights download.")
 
 # --- Page Configuration ---
 st.set_page_config(page_title="AI MEETS PCOS | AI Diagnostic", layout="centered", page_icon="🩺")
 
 # --- Custom CSS Styling ---
 st.markdown("""
-    <style>
-    html, body, .stApp, .main {
-        background-color: #f0f0f0 !important;
-        color: #2c3e50;
-    }
-    h1, h2, h3 {
-        color: #2c3e50 !important;
-        text-align: left !important;
-    }
-    .landing-container {
-        text-align: left !important;
-    }
-    .stButton button {
-        background-color: #4CAF50;
-        color: white;
-        font-size: 16px;
-        padding: 10px 24px;
-        border-radius: 8px;
-    }
-    .stButton button:hover {
-        background-color: #45a049;
-    }
-    .stTextInput>div>div>input,
-    .stNumberInput>div>div>input {
-        border-radius: 8px;
-    }
-    footer, header {visibility: hidden;}
-    .block-container {padding-top: 0rem;}
-    </style>
+<style>
+html, body, .stApp, .main {
+    background-color: #f0f0f0 !important;
+    color: #2c3e50;
+}
+h1, h2, h3 {
+    color: #2c3e50 !important;
+    text-align: left !important;
+}
+.landing-container {
+    text-align: left !important;
+}
+.stButton button {
+    background-color: #4CAF50;
+    color: white;
+    font-size: 16px;
+    padding: 10px 24px;
+    border-radius: 8px;
+}
+.stButton button:hover {
+    background-color: #45a049;
+}
+.stTextInput>div>div>input,
+.stNumberInput>div>div>input {
+    border-radius: 8px;
+}
+footer, header {visibility: hidden;}
+.block-container {padding-top: 0rem;}
+</style>
 """, unsafe_allow_html=True)
 
 # --- Load PCOS Classification Model ---
@@ -51,11 +58,10 @@ def load_classification_model():
 
 model = load_classification_model()
 
-# --- Load Official YOLOv8n pretrained model (auto-downloads weights) ---
+# --- Load YOLOv8 model with fresh weights download ---
 @st.cache_resource
 def load_yolo_model():
-    # This loads the official pretrained yolov8n weights, avoiding corrupted custom files
-    return YOLO('yolov8n.pt')
+    return YOLO('yolov8n.pt')  # Ultralytics downloads fresh weights after cache clear
 
 yolo_model = load_yolo_model()
 
@@ -111,51 +117,51 @@ def count_follicles(image_path):
 
 # --- Custom Title and Description ---
 st.markdown("""
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-    html, body, .stApp {
-        background-color: #f0f0f0;
-        font-family: 'Cairo', sans-serif;
-    }
-    .landing-container {
-        text-align: left !important;
-        padding: 40px;
-        background-color: #ffffff;
-        border-radius: 16px;
-        margin-bottom: 30px;
-        box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
-    }
-    h1 {
-        color: #2c3e50;
-        font-size: 48px;
-        margin-bottom: 10px;
-    }
-    h3 {
-        color: #333;
-        font-size: 20px;
-        margin-bottom: 10px;
-    }
-    .note {
-        font-size: 18px;
-        color: #2c3e50;
-        background-color: #e0e0e0;
-        padding: 10px;
-        border-radius: 8px;
-        display: inline-block;
-        margin-top: 15px;
-    }
-    </style>
-    <div class='landing-container'>
-        <h1>AI MEETS PCOS</h1>
-        <h3>Welcome to the <strong>AI-Powered PCOS Detection Platform</strong></h3>
-        <div>
-            Upload an ultrasound image to perform an initial AI-based screening for 
-            <strong>Polycystic Ovary Syndrome (PCOS)</strong>.
-        </div>
-        <div class='note'>
-            <em>Note: This tool is for preliminary analysis and does not replace professional medical advice.</em>
-        </div>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+<style>
+html, body, .stApp {
+    background-color: #f0f0f0;
+    font-family: 'Cairo', sans-serif;
+}
+.landing-container {
+    text-align: left !important;
+    padding: 40px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+}
+h1 {
+    color: #2c3e50;
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+h3 {
+    color: #333;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+.note {
+    font-size: 18px;
+    color: #2c3e50;
+    background-color: #e0e0e0;
+    padding: 10px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-top: 15px;
+}
+</style>
+<div class='landing-container'>
+    <h1>AI MEETS PCOS</h1>
+    <h3>Welcome to the <strong>AI-Powered PCOS Detection Platform</strong></h3>
+    <div>
+        Upload an ultrasound image to perform an initial AI-based screening for 
+        <strong>Polycystic Ovary Syndrome (PCOS)</strong>.
     </div>
+    <div class='note'>
+        <em>Note: This tool is for preliminary analysis and does not replace professional medical advice.</em>
+    </div>
+</div>
 """, unsafe_allow_html=True)
 
 # --- Patient Information Input ---
@@ -230,6 +236,7 @@ else:
 # --- Footer ---
 st.markdown("---")
 st.markdown("<div style='text-align: center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
+
 
 
 
