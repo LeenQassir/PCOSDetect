@@ -13,7 +13,9 @@ import tempfile
 cache_dir = os.path.expanduser("~/.cache/ultralytics")
 if os.path.exists(cache_dir):
     shutil.rmtree(cache_dir)
-    st.write("Ultralytics cache cleared to force fresh weights download.")
+    st.write("⚠️ Ultralytics cache cleared.")
+else:
+    st.write("Ultralytics cache folder not found, no action needed.")
 
 # --- Page Configuration ---
 st.set_page_config(page_title="AI MEETS PCOS | AI Diagnostic", layout="centered", page_icon="🩺")
@@ -236,6 +238,7 @@ else:
 # --- Footer ---
 st.markdown("---")
 st.markdown("<div style='text-align: center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
+
 
 
 
