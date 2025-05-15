@@ -43,18 +43,18 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- Load the Trained PCOS Classification Model ---
+# --- Load PCOS Classification Model ---
 @st.cache_resource
 def load_classification_model():
     return load_model("best_mobilenet_model.h5")
 
 model = load_classification_model()
 
-# --- Load the YOLO Follicle Detection Model ---
+# --- Load YOLO Follicle Detection Model ---
 @st.cache_resource
 def load_yolo_model():
-    # Replace with your trained YOLOv8 weights path
-    return YOLO("yolov8n.pt")  
+    weights_path = "/mnt/data/yolov8n.pt"  # Path where your uploaded weights are stored
+    return YOLO(weights_path)
 
 yolo_model = load_yolo_model()
 
@@ -229,3 +229,4 @@ else:
 # --- Footer ---
 st.markdown("---")
 st.markdown("<div style='text-align: center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
+
