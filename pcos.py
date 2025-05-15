@@ -6,7 +6,6 @@ from datetime import datetime
 from tensorflow.keras.models import load_model
 from ultralytics import YOLO
 import os
-import shutil
 import tempfile
 
 # --- Page Configuration ---
@@ -52,36 +51,11 @@ def load_classification_model():
 
 model = load_classification_model()
 
-# --- Robust Load YOLO Follicle Detection Model ---
+# --- Load Official YOLOv8n pretrained model (auto-downloads weights) ---
 @st.cache_resource
 def load_yolo_model():
-    possible_paths = [
-        "/mnt/data/yolov8n.pt",  # common upload dir
-        "yolov8n.pt",            # app root
-        "./yolov8n.pt",          # relative path
-    ]
-    
-    src_path = None
-    for path in possible_paths:
-        if os.path.exists(path):
-            src_path = path
-            st.write(f"Found YOLO weights at: {src_path}")
-            break
-    
-    if src_path is None:
-        st.error("Error: YOLO weights file 'yolov8n.pt' not found in expected locations.")
-        st.stop()
-    
-    writable_dir = tempfile.gettempdir()
-    dest_path = os.path.join(writable_dir, "yolov8n.pt")
-    
-    if not os.path.exists(dest_path):
-        st.write(f"Copying weights file from {src_path} to writable location {dest_path}")
-        shutil.copy(src_path, dest_path)
-    else:
-        st.write(f"Weights file already copied to {dest_path}")
-    
-    return YOLO(dest_path)
+    # This loads the official pretrained yolov8n weights, avoiding corrupted custom files
+    return YOLO('yolov8n.pt')
 
 yolo_model = load_yolo_model()
 
@@ -256,6 +230,7 @@ else:
 # --- Footer ---
 st.markdown("---")
 st.markdown("<div style='text-align: center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
+
 
 
 
