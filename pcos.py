@@ -4,8 +4,6 @@ import numpy as np
 import sqlite3
 from datetime import datetime
 from tensorflow.keras.models import load_model
-from ultralytics import YOLO
-import cv2
 
 # --- Page Configuration ---
 st.set_page_config(page_title="AI MEETS PCOS | AI Diagnostic", layout="centered", page_icon="🩺")
@@ -49,19 +47,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- Load the Trained MobileNet Model ---
+# --- Load the Trained Model ---
 @st.cache_resource
 def load_trained_model():
     return load_model("best_mobilenet_model.h5")
 
 model = load_trained_model()
-
-# --- Load the YOLO Follicle Detection Model ---
-@st.cache_resource
-def load_follicle_model():
-    return YOLO('/content/drive/MyDrive/runs/train_revised/weights/best.pt')  # Adjust path as needed
-
-follicle_model = load_follicle_model()
 
 # --- Initialize SQLite Database ---
 def init_db():
@@ -99,36 +90,12 @@ def update_patient_record(patient_id, name, age, prediction, confidence):
 
 init_db()
 
-# --- Preprocess Uploaded Image for MobileNet ---
+# --- Preprocess Uploaded Image ---
 def preprocess_image(image_file):
     img = image_file.resize((224, 224))  
     img_array = np.array(img) / 255.0    
     img_array = np.expand_dims(img_array, axis=0)  
     return img_array
-
-# --- Follicle Detection Function ---
-def detect_follicles(image_pil):
-    # Convert PIL image to OpenCV format
-    img_cv = cv2.cvtColor(np.array(image_pil), cv2.COLOR_RGB2BGR)
-
-    # Run YOLO detection
-    results = follicle_model.predict(img_cv)
-
-    detections = results[0].boxes.data.cpu().numpy()
-    count = len(detections)
-
-    # Draw bounding boxes on the image
-    for box in detections:
-        x1, y1, x2, y2, score, cls = box
-        cv2.rectangle(img_cv, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 1)
-        cv2.putText(img_cv, f'Follicle {score:.2f}', (int(x1), int(y1) - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
-
-    # Convert back to PIL image for Streamlit display
-    img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
-    annotated_img = Image.fromarray(img_rgb)
-
-    return count, annotated_img
 
 # --- Custom Title and Description ---
 st.markdown("""
@@ -217,13 +184,6 @@ else:
                 st.success(f"**{result}** for **{patient_name}**, Age: **{int(patient_age)}**.")
                 st.info(f"*Model Confidence: {confidence:.2f}%*")
 
-                if result == "PCOS Detected":
-                    st.subheader("Follicle Detection")
-
-                    follicle_count, annotated_image = detect_follicles(img)
-                    st.image(annotated_image, caption=f"Detected Follicles: {follicle_count}", use_container_width=True)
-                    st.write(f"Total Follicles Detected: {follicle_count}")
-
                 if prev_record:
                     st.markdown("---")
                     st.subheader("📊 Previous Diagnostic Result Found:")
@@ -250,3 +210,4 @@ else:
 # --- Footer ---
 st.markdown("---")
 st.markdown("<div style='text-align: center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
+
