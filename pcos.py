@@ -9,16 +9,21 @@ from tensorflow.keras.models import load_model
 from ultralytics import YOLO
 import tempfile
 
-# --- Clear Ultralytics cache to fix corrupted weights issue ---
+# --- Clear Ultralytics cache folder before Streamlit UI commands ---
 cache_dir = os.path.expanduser("~/.cache/ultralytics")
+cache_cleared = False
 if os.path.exists(cache_dir):
     shutil.rmtree(cache_dir)
-    st.write("⚠️ Ultralytics cache cleared.")
+    cache_cleared = True
+
+# --- Page Configuration (MUST be first Streamlit command) ---
+st.set_page_config(page_title="AI MEETS PCOS | AI Diagnostic", layout="centered", page_icon="🩺")
+
+# --- Now safe to show UI messages ---
+if cache_cleared:
+    st.write("⚠️ Ultralytics cache cleared to fix model loading issues.")
 else:
     st.write("Ultralytics cache folder not found, no action needed.")
-
-# --- Page Configuration ---
-st.set_page_config(page_title="AI MEETS PCOS | AI Diagnostic", layout="centered", page_icon="🩺")
 
 # --- Custom CSS Styling ---
 st.markdown("""
@@ -63,7 +68,7 @@ model = load_classification_model()
 # --- Load YOLOv8 model with fresh weights download ---
 @st.cache_resource
 def load_yolo_model():
-    return YOLO('yolov8n.pt')  # Ultralytics downloads fresh weights after cache clear
+    return YOLO('yolov8n.pt')  # Will download fresh weights after cache clear
 
 yolo_model = load_yolo_model()
 
@@ -238,6 +243,7 @@ else:
 # --- Footer ---
 st.markdown("---")
 st.markdown("<div style='text-align: center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
+
 
 
 
