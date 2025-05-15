@@ -6,6 +6,8 @@ from datetime import datetime
 from tensorflow.keras.models import load_model
 from ultralytics import YOLO
 import os
+import shutil
+import tempfile
 
 # --- Page Configuration ---
 st.set_page_config(page_title="AI MEETS PCOS | AI Diagnostic", layout="centered", page_icon="🩺")
@@ -50,11 +52,17 @@ def load_classification_model():
 
 model = load_classification_model()
 
-# --- Load YOLO Follicle Detection Model ---
+# --- Load YOLO Follicle Detection Model with writable copy ---
 @st.cache_resource
 def load_yolo_model():
-    weights_path = "/mnt/data/yolov8n.pt"  # Path where your uploaded weights are stored
-    return YOLO(weights_path)
+    src_path = "/mnt/data/yolov8n.pt"
+    writable_dir = tempfile.gettempdir()
+    dest_path = os.path.join(writable_dir, "yolov8n.pt")
+
+    if not os.path.exists(dest_path):
+        shutil.copy(src_path, dest_path)
+
+    return YOLO(dest_path)
 
 yolo_model = load_yolo_model()
 
@@ -180,7 +188,7 @@ else:
         st.image(img, caption="Uploaded Ultrasound Image", use_container_width=True)
         
         # Save temporarily for YOLO prediction (YOLO expects a file path)
-        temp_path = f"/tmp/{patient_id}_uploaded.png"
+        temp_path = os.path.join(tempfile.gettempdir(), f"{patient_id}_uploaded.png")
         img.save(temp_path)
 
         st.markdown("---")
@@ -229,4 +237,5 @@ else:
 # --- Footer ---
 st.markdown("---")
 st.markdown("<div style='text-align: center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
+
 
