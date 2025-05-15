@@ -54,7 +54,7 @@ model = load_classification_model()
 @st.cache_resource
 def load_yolo_model():
     # Replace with your trained YOLOv8 weights path
-    return YOLO("best_yolov8_follicle_model.pt")  
+    return YOLO("yolov8n.pt")  
 
 yolo_model = load_yolo_model()
 
