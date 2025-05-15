@@ -65,10 +65,11 @@ def load_classification_model():
 
 model = load_classification_model()
 
-# --- Load YOLOv8 model with fresh weights download ---
+# --- Load YOLOv8 model with official pretrained weights from ultralytics hub ---
 @st.cache_resource
 def load_yolo_model():
-    return YOLO('yolov8n.pt')  # Will download fresh weights after cache clear
+    # Load by model name to force fresh download of official weights, avoid local corrupted files
+    return YOLO('yolov8n')
 
 yolo_model = load_yolo_model()
 
@@ -193,7 +194,6 @@ else:
         img = Image.open(uploaded_file).convert("RGB")
         st.image(img, caption="Uploaded Ultrasound Image", use_container_width=True)
         
-        # Save temporarily for YOLO prediction (YOLO expects a file path)
         temp_path = os.path.join(tempfile.gettempdir(), f"{patient_id}_uploaded.png")
         img.save(temp_path)
 
@@ -203,11 +203,9 @@ else:
             if st.button("Analyze Image"):
                 st.subheader("AI Diagnostic Result")
 
-                # Count follicles via YOLO
                 follicle_count = count_follicles(temp_path)
                 st.write(f"Follicle count detected: **{follicle_count}**")
 
-                # PCOS classification
                 processed_img = preprocess_image(img)
                 prediction = model.predict(processed_img)
                 result = "PCOS Detected" if prediction[0][0] > 0.5 else "No PCOS Detected"
@@ -243,10 +241,3 @@ else:
 # --- Footer ---
 st.markdown("---")
 st.markdown("<div style='text-align: center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
-
-
-
-
-
-
-
