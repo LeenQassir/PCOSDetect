@@ -210,4 +210,3 @@ else:
 # --- Footer ---
 st.markdown("---")
 st.markdown("<div style='text-align: center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
-
