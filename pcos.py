@@ -7,28 +7,25 @@ import sqlite3
 from datetime import datetime
 from tensorflow.keras.models import load_model
 
-# Fix Ultralytics cache dir permission issue by using system temp dir
-cache_dir = os.path.join(tempfile.gettempdir(), "yolo_cache")
-os.environ['YOLO_CACHE_DIR'] = cache_dir
-os.makedirs(cache_dir, exist_ok=True)
-
-from ultralytics import YOLO
-
 # Path to your uploaded YOLO weights file
-weights_path = "/mnt/data/yolov8n.pt"  # Adjust if needed
+WEIGHTS_PATH = "/mnt/data/yolov8n.pt"  # Adjust if needed
 
-@st.cache_resource
-def load_classification_model():
+@st.cache_resource(show_spinner=False)
+def get_classification_model():
     return load_model("best_mobilenet_model.h5")
 
-@st.cache_resource
-def load_yolo_model(weights_file):
-    return YOLO(weights_file)
+@st.cache_resource(show_spinner=False)
+def get_yolo_model(weights_path):
+    # Set cache directory env var before importing YOLO
+    os.environ['YOLO_CACHE_DIR'] = '/mnt/data/yolo_cache'
+    # Ultralytics import delayed until here to respect env var
+    from ultralytics import YOLO
+    return YOLO(weights_path)
 
-model = load_classification_model()
-yolo_model = load_yolo_model(weights_path)
+model = get_classification_model()
+yolo_model = get_yolo_model(WEIGHTS_PATH)
 
-# Initialize database
+# Database setup
 def init_db():
     conn = sqlite3.connect('patients.db')
     cursor = conn.cursor()
@@ -80,7 +77,7 @@ def detect_and_visualize_follicles(image_path):
     img_with_boxes = results[0].plot()
     return count, img_with_boxes
 
-# UI
+# Streamlit UI
 st.markdown("""
 <style>
 .landing-container {
@@ -174,5 +171,6 @@ else:
 
 st.markdown("---")
 st.markdown("<div style='text-align:center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
+
 
 
