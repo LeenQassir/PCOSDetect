@@ -1,8 +1,6 @@
 import streamlit as st
 import os
 import tempfile
-import requests
-from pathlib import Path
 from PIL import Image
 import numpy as np
 import sqlite3
@@ -10,43 +8,21 @@ from datetime import datetime
 from tensorflow.keras.models import load_model
 from ultralytics import YOLO
 
-# --- Download YOLO weights fresh every run ---
-def download_yolo_weights(dest_path):
-    url = "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt"
-    if not os.path.exists(dest_path):
-        st.write("Downloading YOLOv8n weights (~6 MB)...")
-        r = requests.get(url, stream=True)
-        r.raise_for_status()
-        with open(dest_path, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
-        st.write("Download complete.")
-    else:
-        st.write("YOLO weights found locally.")
+# --- Use uploaded YOLO weights file ---
+weights_path = "/mnt/data/yolov8n.pt"  # Your uploaded weights location
 
-# --- Page config (must be first Streamlit command) ---
-st.set_page_config(page_title="AI MEETS PCOS | AI Diagnostic", layout="centered", page_icon="🩺")
-
-# Download weights to a temp file
-temp_dir = tempfile.gettempdir()
-weights_path = os.path.join(temp_dir, "yolov8n.pt")
-download_yolo_weights(weights_path)
-
-# --- Load PCOS classification model ---
 @st.cache_resource
 def load_classification_model():
     return load_model("best_mobilenet_model.h5")
 
-model = load_classification_model()
-
-# --- Load YOLO model from freshly downloaded weights ---
 @st.cache_resource
 def load_yolo_model(weights_file):
     return YOLO(weights_file)
 
+model = load_classification_model()
 yolo_model = load_yolo_model(weights_path)
 
-# --- Initialize SQLite database ---
+# --- Initialize database ---
 def init_db():
     conn = sqlite3.connect('patients.db')
     cursor = conn.cursor()
@@ -86,45 +62,46 @@ def update_patient_record(patient_id, name, age, prediction, confidence, follicl
     conn.commit()
     conn.close()
 
-# --- Image preprocessing ---
+# --- Image preprocessing for classification ---
 def preprocess_image(image_file):
     img = image_file.resize((224, 224))
     img_array = np.array(img) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
     return img_array
 
-# --- Follicle counting ---
-def count_follicles(image_path):
-    results = yolo_model.predict(image_path, conf=0.25, iou=0.45)
+# --- Follicle detection with visualization ---
+def detect_and_visualize_follicles(image_path):
+    results = yolo_model.predict(image_path, conf=0.1, iou=0.45)  # Lower conf threshold for sensitivity
     count = len(results[0].boxes) if results else 0
-    return count
+    img_with_boxes = results[0].plot()  # numpy array with boxes drawn
+    return count, img_with_boxes
 
-# --- UI ---
+# --- Streamlit UI ---
 st.markdown("""
-    <style>
-    .landing-container {
-        text-align: left;
-        padding: 40px;
-        background-color: #fff;
-        border-radius: 16px;
-        margin-bottom: 30px;
-        box-shadow: 0 0 15px rgba(0,0,0,0.1);
-    }
-    h1 { color: #2c3e50; font-size: 48px; margin-bottom: 10px; }
-    h3 { color: #333; font-size: 20px; margin-bottom: 10px; }
-    .note {
-        font-size: 18px; color: #2c3e50;
-        background-color: #e0e0e0; padding: 10px;
-        border-radius: 8px; display: inline-block;
-        margin-top: 15px;
-    }
-    </style>
-    <div class='landing-container'>
-        <h1>AI MEETS PCOS</h1>
-        <h3>AI-Powered PCOS Detection Platform</h3>
-        <div>Upload an ultrasound image to perform AI-based screening for <strong>Polycystic Ovary Syndrome (PCOS)</strong>.</div>
-        <div class='note'><em>Note: For preliminary analysis only. Not a substitute for professional medical advice.</em></div>
-    </div>
+<style>
+.landing-container {
+    text-align: left;
+    padding: 40px;
+    background-color: #fff;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+h1 { color: #2c3e50; font-size: 48px; margin-bottom: 10px; }
+h3 { color: #333; font-size: 20px; margin-bottom: 10px; }
+.note {
+    font-size: 18px; color: #2c3e50;
+    background-color: #e0e0e0; padding: 10px;
+    border-radius: 8px; display: inline-block;
+    margin-top: 15px;
+}
+</style>
+<div class='landing-container'>
+    <h1>AI MEETS PCOS</h1>
+    <h3>AI-Powered PCOS Detection Platform</h3>
+    <div>Upload an ultrasound image to perform AI-based screening for <strong>Polycystic Ovary Syndrome (PCOS)</strong>.</div>
+    <div class='note'><em>Note: For preliminary analysis only. Not a substitute for professional medical advice.</em></div>
+</div>
 """, unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
@@ -154,8 +131,10 @@ else:
             if st.button("Analyze Image"):
                 st.subheader("AI Diagnostic Result")
 
-                follicle_count = count_follicles(temp_path)
+                follicle_count, img_with_boxes = detect_and_visualize_follicles(temp_path)
                 st.write(f"Follicle count detected: **{follicle_count}**")
+
+                st.image(img_with_boxes, caption="Detected follicles", use_container_width=True)
 
                 processed_img = preprocess_image(img)
                 prediction = model.predict(processed_img)
@@ -191,4 +170,3 @@ else:
 
 st.markdown("---")
 st.markdown("<div style='text-align:center;'>© 2025 PCOS Detection AI | For Medical Research Use Only.</div>", unsafe_allow_html=True)
-
